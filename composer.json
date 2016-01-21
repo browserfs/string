@@ -1,7 +1,5 @@
 {
     "name":              "browserfs/string",
-    "stability":         "stable",
-    "version":           "0.1",
     "description":       "A library for handling strings ( parsing )",
     "type":              "library",
     "license":           "MIT",
@@ -28,6 +26,11 @@
     "autoload": {
         "psr-4": {
             "browserfs\\string\\": "src/"
+        }
+    },
+    "extra": {
+        "branch-alias": {
+            "dev-master": "0.1"
         }
     }
 }
