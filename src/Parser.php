@@ -7,9 +7,10 @@
 	 */
 	class Parser {
 
-		protected $parsed  = '';
-		protected $remain  = '';
-		protected $lineNum = 1;
+		protected $parsed   = '';
+		protected $remain   = '';
+		protected $lineNum  = 1;
+		protected $fileName = '<UNKNOWN>';
 
 		/**
 		 * @constructor
@@ -94,6 +95,24 @@
 		 */
 		public function line() {
 			return $this->lineNum;
+		}
+
+		/**
+		 * Returns the name of the file.
+		 */
+		public function file() {
+			return $this->fileName;
+		}
+
+		/**
+		 * Sets the name of the file. This has nothing to do with filesystem,
+		 * the name of the file is only needed for generating usefull parsing
+		 * exceptions.
+		 */
+		public function setFileName( $name = null ) {
+			$this->fileName = is_string( $name ) && strlen( $name ) > 0
+				? $name
+				: '<UNKNOWN>';
 		}
 
 		/**
