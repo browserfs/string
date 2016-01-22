@@ -110,7 +110,7 @@
 		 * exceptions.
 		 */
 		public function setFileName( $name = null ) {
-			$this->fileName = is_string( $name ) && strlen( $name ) > 0
+			$this->fileName = ( is_string( $name ) && strlen( $name ) > 0 )
 				? $name
 				: '<UNKNOWN>';
 		}
