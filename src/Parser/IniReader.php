@@ -10,8 +10,8 @@
 			'['           => '/^\\[/',
 			']'           => '/^\\]/',
 			'='           => '/^=/',
-			'IDENTIFIER'  => '/^[\\$a-zA-Z_]([a-zA-Z0-9\\-\\$_]+)?((\\.[\\$a-zA-Z_]([a-zA-Z0-9\\-\\$_]+)?)+)?$/',
-			'VALUE'       => '/^[\\^\\n]+/',
+			'IDENTIFIER'  => '/^[\\$a-zA-Z_]([a-zA-Z0-9\\-\\$_]+)?((\\.[\\$a-zA-Z_]([a-zA-Z0-9\\-\\$_]+)?)+)?/',
+			'VALUE'       => '/^[^\\n]+/',
 			'EXTENDS'     => '/^extends[\\s]+/'
 		];
 
@@ -72,6 +72,9 @@
 			$matches = $this->canReadExpression( self::$tokens[ $tokenName ] );
 
 			if ( false !== $matches ) {
+
+				$this->consume( strlen( $matches[0] ) );
+
 				return isset( $matches[ $returnIndex ] )
 					? $matches[ $returnIndex ]
 					: '';
@@ -103,7 +106,7 @@
 
 		public function sectionExists( $sectionName ) {
 			return ( is_string( $sectionName ) && ( strlen( $sectionName ) > 0 ) )
-				? ( in_array( $sectionName, $this->sections ) ? true : false )
+				? ( array_key_exists( $sectionName, $this->sections ) ? true : false )
 				: false;
 		}
 
@@ -287,11 +290,15 @@
 				throw new \browserfs\Exception('Unexpected token "' . $this->nextToken() . '", expected "=", at line ' . $this->line() . ' in file "' . $this->file() . '"' );
 			}
 
+			$this->readWhiteSpaceOrComment();
+
 			$propertyValue = $this->readString('VALUE');
 
 			if ( $propertyValue === false ) {
 				throw new \browserfs\Exception('Unexpected token "' . $this->nextToken() . '", expected <value>, at line ' . $this->line() . ' in file "' . $this->file() . '"' );
 			}
+
+			$propertyValue = trim( $propertyValue );
 
 			$result = '';
 			$done = false;
@@ -332,6 +339,9 @@
 						}
 
 						break;
+					default;
+						$result .= $propertyValue[$i];
+						break;
 				}
 
 				if ( $done ) {
@@ -341,7 +351,7 @@
 
 			return [
 				'name' => $propertyName,
-				'value' => $result
+				'value' => trim($result)
 			];
 
 		}
@@ -383,6 +393,64 @@
 
 		public static function create( $iniFileName ) {
 			return new self( $iniFileName );
+		}
+
+		public function getPropertyInt( $sectionName, $propertyName, $defaultValue ) {
+			if ( !is_int( $defaultValue ) ) {
+				throw new \browserfs\Exception('Invalid argument $defaultValue: int expected!');
+			}
+
+			$result = $this->getProperty( $sectionName, $propertyName, null );
+
+			if ( $result === null ) {
+				return $defaultValue;
+			} else {
+				if ( preg_match( '/^(0|(\\-)?[1-9]([0-9]+)?)$/', $result ) ) {
+					return (int)$result;
+				} else {
+					return $defaultValue;
+				}
+			}
+		}
+
+		public function getPropertyBool( $sectionName, $propertyName, $defaultValue ) {
+			if ( !is_bool( $defaultValue ) ) {
+				throw new \browserfs\Exception('Invalid argument $defaultValue: boolean expected!');
+			}
+
+			$result = $this->getProperty( $sectionName, $propertyName, null );
+
+			if ( $result === null ) {
+				return $defaultValue;
+			} else {
+				switch ( true ) {
+					case preg_match( '/^(1|y|yes|on)$/i', $result ) ? true : false:
+						return true;
+						break;
+					case preg_match( '/^(0|n|no|off)$/i', $result ) ? true : false:
+						return false;
+						break;
+					default:
+						return $defaultValue;
+						break;
+				}
+			}
+		}
+
+		/**
+		 * Getters are available in format "section_name/property_name"
+		 *
+		 * e.g.: $this->{"section/property"}
+		 */
+		public function __get( $propertyName ) {
+			switch ( true ) {
+				case preg_match( '/^([^\\/]+)\\/(.*)$/', $propertyName, $matches ) ? true : false:
+					return $this->getProperty( $matches[1], $matches[2], '' );
+					break;
+				default:
+					return '';
+					break;
+			}
 		}
 
 	}
