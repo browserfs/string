@@ -19,7 +19,7 @@
 		public function __construct( $buffer ) {
 			
 			if ( !is_string( $buffer ) ) {
-				throw new \browserfs\runtime\Exception('String expected!');
+				throw new \browserfs\Exception('String expected!');
 			}
 
 			$this->remain = $buffer;
@@ -29,12 +29,12 @@
 		 * Removes a number of bytes $bytes starting with the beginning of
 		 * the buffer, marks those bytes as "read", and advances in buffer.
 		 * @return void
-		 * @throws \browserfs\runtime\Exception
+		 * @throws \browserfs\Exception
 		 */
 		public function consume( $bytes ) {
 			
 			if ( !is_int( $bytes ) || $bytes < 0 ) {
-				throw new \browserfs\runtime\Exception('Invalid argument!');
+				throw new \browserfs\Exception('Invalid argument!');
 			}
 
 			$chunk = substr( $this->remain, 0, $bytes );
