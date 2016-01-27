@@ -17,7 +17,7 @@
 
 		protected $sections = [];
 
-		public function __construct( $fileName ) {
+		public function __construct( $fileName, $allowDuplicatePropertyNames = false ) {
 
 			if ( !is_string( $fileName ) || !strlen( $fileName ) ) {
 				throw new \browserfs\Exception( 'Invalid argument. Expected a non-empty string!' );
@@ -41,7 +41,7 @@
 
 			$this->setFileName( $fileName );
 
-			$this->parse();
+			$this->parse( $allowDuplicatePropertyNames );
 
 		}
 
@@ -234,6 +234,33 @@
 		
 		}
 
+		public function getSections() {
+			
+			$result = [];
+			
+			foreach ( $this->sections as $sectionName => $sectionProperties ) {
+				$result[] = $sectionName;
+			}
+
+			return $result;
+		}
+
+		public function getSectionProperties( $sectionName ) {
+
+			$result = [];
+
+			if ( $this->sectionExists( $sectionName ) ) {
+
+				foreach ( $this->sections[ $sectionName ] as $property ) {
+					$result[] = $property['name'];
+				}
+
+			}
+
+			return array_values( array_unique( $result ) );
+
+		}
+
 		protected function readSection() {
 
 			$this->readWhiteSpaceOrComment();
@@ -356,7 +383,7 @@
 
 		}
 
-		protected function parse() {
+		protected function parse( $allowDuplicatePropertyNames = false ) {
 
 			$currentSection = 'main';
 
@@ -382,17 +409,13 @@
 						// read section property
 						$result = $this->readProperty();
 
-						$this->addSectionProperty( $currentSection, $result['name'], $result['value'] );
+						$this->addSectionProperty( $currentSection, $result['name'], $result['value'], $allowDuplicatePropertyNames );
 
 						break;
 				}
 
 			}
 
-		}
-
-		public static function create( $iniFileName ) {
-			return new self( $iniFileName );
 		}
 
 		public function getPropertyInt( $sectionName, $propertyName, $defaultValue ) {
@@ -414,6 +437,7 @@
 		}
 
 		public function getPropertyBool( $sectionName, $propertyName, $defaultValue ) {
+			
 			if ( !is_bool( $defaultValue ) ) {
 				throw new \browserfs\Exception('Invalid argument $defaultValue: boolean expected!');
 			}
@@ -451,6 +475,13 @@
 					return '';
 					break;
 			}
+		}
+
+		/**
+		 * Static constructor
+		 */
+		public static function create( $iniFileName, $allowDuplicatePropertyNames = false ) {
+			return new self( $iniFileName );
 		}
 
 	}
