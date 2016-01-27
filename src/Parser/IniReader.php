@@ -2,6 +2,10 @@
 
 	namespace browserfs\string\Parser;
 
+	/**
+	 * This class is handling parsing ini files.
+	 */
+
 	class IniReader extends \browserfs\string\Parser {
 
 		protected static $tokens = [
@@ -17,6 +21,12 @@
 
 		protected $sections = [];
 
+		/**
+		 * Class constructor. Parses a fileName.
+		 * @param fileName - string - path to the ini file
+		 * @param allowDuplicatePropertyNames - boolean - whether to allow inside a ini section
+		 *        instances of the same property with the same property name.
+		 */
 		public function __construct( $fileName, $allowDuplicatePropertyNames = false ) {
 
 			if ( !is_string( $fileName ) || !strlen( $fileName ) ) {
@@ -45,6 +55,12 @@
 
 		}
 
+		/**
+		 * Reads a regular expression token from the parser remaining buffer,
+		 * and returns TRUE if the token could be read, or FALSE otherwise.
+		 * @param tokenName string
+		 * @return boolean
+		 */
 		protected function read( $tokenName ) {
 			if ( !is_string( $tokenName ) || !array_key_exists( $tokenName, self::$tokens ) ) {
 				throw new \browserfs\Exception('Invalid token ' . json_encode( $tokenName ) );
@@ -60,6 +76,13 @@
 			}
 		}
 
+		/**
+		 * If the parser can read the regular expression $tokenName, returns its
+		 * content. Otherwise, returns FALSE.
+		 * @param tokenName: string.
+		 * @param $returnIndex: int
+		 * @return string | false
+		 */
 		protected function readString( $tokenName, $returnIndex = 0 ) {
 			if ( !is_string( $tokenName ) || !array_key_exists( $tokenName, self::$tokens ) ) {
 				throw new \browserfs\Exception( 'Invalid token ' . json_encode( $tokenName ) );
@@ -83,6 +106,10 @@
 			}
 		}
 
+		/**
+		 * Reads a continuous sequence of white spaces and comments.
+		 * @return boolean -> TRUE if at least one white space or comment was read.
+		 */
 		protected function readWhiteSpaceOrComment() {
 			$once = false;
 
@@ -104,12 +131,23 @@
 
 		}
 
+		/**
+		 * Returns true if a section with the name $sectionName was parsed from the ini file.
+		 * @param $sectionName: string
+		 * @return boolean
+		 */
 		public function sectionExists( $sectionName ) {
 			return ( is_string( $sectionName ) && ( strlen( $sectionName ) > 0 ) )
 				? ( array_key_exists( $sectionName, $this->sections ) ? true : false )
 				: false;
 		}
 
+		/**
+		 * Creates internally a new section called $targetSection, with all the properties from $sourceSection.
+		 * @param $sourceSection - string
+		 * @param $targetSection - string
+		 * @return void
+		 */
 		protected function cloneSection( $sourceSection, $targetSection ) {
 			
 			$this->createSection( $targetSection );
@@ -122,6 +160,14 @@
 
 		}
 
+		/**
+		 * Creates internally a new section called $sectionName, optionally extending
+		 * another existing section.
+		 * @param $sectionName: string
+		 * @param $extendsSection: string | null
+		 * @return void
+		 * @throws \browserfs\Exception on invalid arguments.
+		 */
 		protected function createSection( $sectionName, $extendsSection = null ) {
 
 			if ( !is_string( $sectionName ) ) {
@@ -144,6 +190,16 @@
 
 		}
 
+		/**
+		 * Adds a property called $propertyName inside of an existing section called $sectionName
+		 * @param $sectionName: string - name of the section where to add the new property
+		 * @param $propertyName: string - name of the property
+		 * @param $propertyValue: any - the value of the newly inserted property
+		 * @param $allowDuplicatePropertyNames - whether to allow multiple instances of the same 
+		 *        properties or not inside of the section.
+		 * @throws \browserfs\Exception on invalid arguments
+		 * @return void
+		 */
 		public function addSectionProperty( $sectionName, $propertyName, $propertyValue, $allowDuplicatePropertyNames = false ) {
 
 			if ( !is_string( $sectionName ) ) {
@@ -195,6 +251,14 @@
 			}
 		}
 
+		/**
+		 * Returns the value of the property called $propertyName from the section context called $sectionName.
+		 * If multiple properties with the same name exists inside of the same section, the first one's value is returned.
+		 * @param $sectionName: string
+		 * @param $propertyName: string
+		 * @param $defaultValue: any
+		 * @return any
+		 */
 		public function getProperty( $sectionName, $propertyName, $defaultValue = '' ) {
 			if ( $this->sectionExists( $sectionName ) ) {
 				foreach ( $this->sections[ $sectionName ] as $property ) {
@@ -208,6 +272,14 @@
 			}
 		}
 
+		/**
+		 * Returns the list of values from the properties inside the section $sectionName, who have
+		 * their name called $propertyName.
+		 * @param $sectionName: string
+		 * @param $propertyName: string
+		 * @param $defaultValue: any[]
+		 * @return any[]
+		 */
 		public function getPropertyMulti( $sectionName, $propertyName, $defaultValue = [] ) {
 			
 			if ( $this->sectionExists( $sectionName ) ) {
@@ -234,6 +306,10 @@
 		
 		}
 
+		/**
+		 * Returns the names of the sections loaded from the ini file.
+		 * @return string[]
+		 */
 		public function getSections() {
 			
 			$result = [];
@@ -245,6 +321,11 @@
 			return $result;
 		}
 
+		/**
+		 * Returns all the property names from a loaded section.
+		 * @param sectionName: string
+		 * @return string[]
+		 */
 		public function getSectionProperties( $sectionName ) {
 
 			$result = [];
@@ -261,6 +342,9 @@
 
 		}
 
+		/**
+		 * Reads the content of a section ( in parsing stage )
+		 */
 		protected function readSection() {
 
 			$this->readWhiteSpaceOrComment();
@@ -301,6 +385,9 @@
 
 		}
 
+		/**
+		 * Reads the name and the value of the current property (in parsing stage)
+		 */
 		protected function readProperty() {
 
 			$this->readWhiteSpaceOrComment();
@@ -383,6 +470,12 @@
 
 		}
 
+		/**
+		 * Parses the ini file. Used internally by constructor.
+		 * @param $allowDuplicatePropertyNames: boolean - whether to allow properties with the same name
+		 *        inside of the current section.
+		 * @return void
+		 */
 		protected function parse( $allowDuplicatePropertyNames = false ) {
 
 			$currentSection = 'main';
@@ -418,6 +511,14 @@
 
 		}
 
+		/**
+		 * Returns the value of the property $propertyName from the section $sectionName as integer.
+		 * @param $sectionName: string
+		 * @param $propertyName: string
+		 * @param $defaultValue: int
+		 * @throws \browserfs\Exception on invalid arguments.
+		 * @return int
+		 */
 		public function getPropertyInt( $sectionName, $propertyName, $defaultValue ) {
 			if ( !is_int( $defaultValue ) ) {
 				throw new \browserfs\Exception('Invalid argument $defaultValue: int expected!');
@@ -436,6 +537,14 @@
 			}
 		}
 
+		/**
+		 * Returns the value of the property $propertyName from the section $sectionName as boolean.
+		 * @param $sectionName: string
+		 * @param $propertyName: string
+		 * @param $defaultValue: boolean
+		 * @throws \browserfs\Exception on invalid arguments
+		 * @return boolean
+		 */
 		public function getPropertyBool( $sectionName, $propertyName, $defaultValue ) {
 			
 			if ( !is_bool( $defaultValue ) ) {
@@ -479,6 +588,10 @@
 
 		/**
 		 * Static constructor
+		 * @param $iniFileName: string - path to the ini file
+		 * @param $allowDuplicatePropertyNames: boolean - whether to allow multiple properties with the same
+		 *        name inside of the same section.
+		 * @return \browserfs\string\Parser\IniReader.
 		 */
 		public static function create( $iniFileName, $allowDuplicatePropertyNames = false ) {
 			return new self( $iniFileName );
