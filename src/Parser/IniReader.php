@@ -260,16 +260,25 @@
 		 * @return any
 		 */
 		public function getProperty( $sectionName, $propertyName, $defaultValue = '' ) {
+			
 			if ( $this->sectionExists( $sectionName ) ) {
+
+				$result = $defaultValue;
+
 				foreach ( $this->sections[ $sectionName ] as $property ) {
 					if ( $property['name'] == $propertyName ) {
-						return $property['value'];
+						$result = $property['value'];
 					}
 				}
-				return $defaultValue;
+				
+				return $result;
+
 			} else {
+
 				return $defaultValue;
+				
 			}
+
 		}
 
 		/**
@@ -288,9 +297,9 @@
 				$found  = false;
 
 				foreach ( $this->sections[ $sectionName ] as $property ) {
-					if ( $property['name'] = $propertyName ) {
+					if ( $property['name'] == $propertyName ) {
 						$found = true;
-						$result[] = $defaultValue;
+						$result[] = $property['value'];
 					}
 				}
 
